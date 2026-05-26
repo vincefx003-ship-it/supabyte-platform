@@ -21,7 +21,7 @@ if (form) {
     try {
 
       const response = await fetch(
-        "https://last-deserve-defrost.ngrok-free.dev/submit-request",
+        "https://supabyte-platform.onrender.com/requests",
         {
           method: "POST",
           headers: {
