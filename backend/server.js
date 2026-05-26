@@ -3,11 +3,9 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
-const multer = require("multer");
-
-const { db, bucket } = require("./config/firebase");
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
@@ -24,7 +22,9 @@ const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 */
 async function sendTelegramNotification(message) {
   try {
-    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+
+    const url =
+      `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
 
     const res = await axios.post(
       url,
@@ -42,27 +42,34 @@ async function sendTelegramNotification(message) {
     console.log("✅ Telegram sent:", res.data);
 
   } catch (error) {
-    console.error("❌ Telegram failed:", error.code || error.message);
+
+    console.error(
+      "❌ Telegram failed:",
+      error.code || error.message
+    );
+
   }
 }
 
 /*
-  📦 FILE UPLOAD (Firebase Storage)
+  🗂 TEMP LOCAL DATABASE
 */
-const upload = multer({ storage: multer.memoryStorage() });
+let requests = [];
 
 /*
-  🏠 HOME
+  🏠 HOME ROUTE
 */
 app.get("/", (req, res) => {
-  res.send("🚀 Supabyte Firebase Backend Running...");
+  res.send("🚀 Supabyte Local Backend Running...");
 });
 
 /*
-  📥 SUBMIT REQUEST (Firestore + Telegram)
+  📥 SUBMIT REQUEST
 */
 app.post("/submit-request", async (req, res) => {
+
   try {
+
     const requestData = req.body;
 
     /*
@@ -70,130 +77,182 @@ app.post("/submit-request", async (req, res) => {
     */
     let assignedTo = "General Desk";
 
-    if (requestData.service === "KUCCPS Application") {
+    if (
+      requestData.service ===
+      "KUCCPS Application"
+    ) {
+
       assignedTo = "Education Desk";
-    } else if (requestData.service === "eCitizen Services") {
-      assignedTo = "Government Services Desk";
-    } else if (requestData.service === "Printing & Scanning") {
+
+    } else if (
+      requestData.service ===
+      "eCitizen Services"
+    ) {
+
+      assignedTo =
+        "Government Services Desk";
+
+    } else if (
+      requestData.service ===
+      "Printing & Scanning"
+    ) {
+
       assignedTo = "Cyber Desk";
+
     }
 
     /*
       CREATE REQUEST
     */
     const newRequest = {
+
       id: Date.now(),
+
       ...requestData,
+
       assignedTo,
+
       status: "Pending",
+
       createdAt: new Date()
+
     };
 
     /*
-      SAVE TO FIRESTORE
+      SAVE LOCALLY
     */
-    await db.collection("requests").add(newRequest);
-    console.log("🔥 Saved to Firestore");
+    requests.push(newRequest);
+
+    console.log("🔥 Request saved locally");
 
     /*
       TELEGRAM MESSAGE
     */
     const telegramMessage =
-      "🚨 <b>NEW SERVICE REQUEST</b>\n\n" +
+      "🚨 NEW SERVICE REQUEST\n\n" +
       `👤 Name: ${newRequest.name}\n` +
       `📞 Phone: ${newRequest.phone}\n` +
       `🛠 Service: ${newRequest.service}\n` +
       `📌 Assigned To: ${newRequest.assignedTo}\n` +
       `📅 Time: ${new Date().toLocaleString()}`;
 
-    await sendTelegramNotification(telegramMessage);
+    await sendTelegramNotification(
+      telegramMessage
+    );
+
+    /*
+      TERMINAL LOG
+    */
+    console.log("\n==============================");
+    console.log("🚨 NEW SERVICE REQUEST");
+    console.log("==============================");
+    console.log("Name:", newRequest.name);
+    console.log("Phone:", newRequest.phone);
+    console.log("Service:", newRequest.service);
+    console.log("Assigned To:", newRequest.assignedTo);
+    console.log("==============================\n");
 
     /*
       RESPONSE
     */
     res.json({
       success: true,
-      message: "Request submitted successfully",
+      message:
+        "Request submitted successfully",
       data: newRequest
     });
 
   } catch (error) {
-    console.error("❌ Submit error:", error);
-    res.status(500).json({ message: "Server error" });
+
+    console.error(
+      "❌ Submit error:",
+      error
+    );
+
+    res.status(500).json({
+      message: "Server error"
+    });
+
   }
+
 });
 
 /*
-  📤 FILE UPLOAD (Firebase Storage)
+  📄 GET ALL REQUESTS
 */
-app.post("/upload", upload.single("file"), async (req, res) => {
-  try {
-    const file = req.file;
+app.get("/requests", (req, res) => {
 
-    if (!file) {
-      return res.status(400).json({ message: "No file uploaded" });
-    }
+  res.json(requests);
 
-    const fileName = `${Date.now()}-${file.originalname}`;
-    const fileRef = bucket.file(fileName);
-
-    const stream = fileRef.createWriteStream({
-      metadata: {
-        contentType: file.mimetype
-      }
-    });
-
-    stream.on("error", (err) => {
-      console.error(err);
-      res.status(500).json({ message: "Upload failed" });
-    });
-
-    stream.on("finish", async () => {
-      await fileRef.makePublic();
-
-      const url = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
-
-      res.json({
-        success: true,
-        url
-      });
-    });
-
-    stream.end(file.buffer);
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
-  }
 });
 
 /*
-  📄 GET REQUESTS (Firestore)
+  🔄 UPDATE STATUS
 */
-app.get("/requests", async (req, res) => {
-  try {
-    const snapshot = await db.collection("requests").get();
+app.put("/update-status/:id", (req, res) => {
 
-    let requests = [];
+  const id = Number(req.params.id);
 
-    snapshot.forEach(doc => {
-      requests.push({
-        docId: doc.id,
-        ...doc.data()
-      });
+  const { status } = req.body;
+
+  const request = requests.find(
+    r => r.id === id
+  );
+
+  if (!request) {
+
+    return res.status(404).json({
+      message: "Request not found"
     });
 
-    res.json(requests);
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to fetch requests" });
   }
+
+  request.status = status;
+
+  res.json({
+    success: true,
+    message: "Status updated"
+  });
+
+});
+
+/*
+  👤 ASSIGN TASK
+*/
+app.put("/assign-task/:id", (req, res) => {
+
+  const id = Number(req.params.id);
+
+  const { assignedTo } = req.body;
+
+  const request = requests.find(
+    r => r.id === id
+  );
+
+  if (!request) {
+
+    return res.status(404).json({
+      message: "Request not found"
+    });
+
+  }
+
+  request.assignedTo = assignedTo;
+
+  res.json({
+    success: true,
+    message: "Task assigned"
+  });
+
 });
 
 /*
   🚀 START SERVER
 */
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+
+  console.log(
+    `🚀 Server running on port ${PORT}`
+  );
+
 });

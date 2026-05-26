@@ -21,7 +21,7 @@ if (form) {
     try {
 
       const response = await fetch(
-        "http://localhost:3000/submit-request",
+        "https://last-deserve-defrost.ngrok-free.dev/submit-request",
         {
           method: "POST",
           headers: {
