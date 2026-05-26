@@ -9,7 +9,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
 
 /*
   🔐 TELEGRAM CONFIG
@@ -184,6 +184,18 @@ app.get("/requests", (req, res) => {
 
   res.json(requests);
 
+});
+app.post("/requests", (req, res) => {
+  const newRequest = req.body;
+
+  requests.push(newRequest);
+
+  console.log("Received request:", newRequest);
+
+  res.json({
+    success: true,
+    message: "Request saved successfully"
+  });
 });
 
 /*
