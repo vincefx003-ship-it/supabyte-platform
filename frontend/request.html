@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request Service - Supabyte ICT</title>
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+  <header>
+    <h1>Request a Service</h1>
+    <p>Supabyte ICT Service Portal</p>
+  </header>
+
+  <section class="form-container">
+
+    <form id="requestForm">
+
+      <input
+        type="text"
+        id="name"
+        placeholder="Full Name"
+        required
+      >
+
+      <input
+        type="tel"
+        id="phone"
+        placeholder="Phone Number"
+        required
+      >
+
+      <select id="service" required>
+
+        <option value="">Select Service</option>
+
+        <option>KUCCPS Application</option>
+        <option>KUCCPS Revision</option>
+        <option>KUCCPS Query</option>
+        <option>Transfer Application</option>
+        <option>HELB/HEF Services</option>
+        <option>HELB Funds appeal</option>
+        <option>eCitizen Services</option>
+        <option>SHA / NHIF Assistance</option>
+        <option>Printing & Scanning</option>
+        <option>CV Writing</option>
+        <option>Cyber Services</option>
+
+      </select>
+
+      <textarea
+        id="description"
+        placeholder="Describe your request"
+        rows="6"
+        required
+      ></textarea>
+
+      <button type="submit">
+        Submit Request
+      </button>
+
+    </form>
+
+  </section>
+
+  <script src="js/main.js"></script>
+
+</body>
+</html>
