@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Admin Dashboard</title>
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+  <header>
+    <h1>Supabyte Admin Dashboard</h1>
+  </header>
+
+  <section class="dashboard">
+
+    <table border="1" width="100%" cellpadding="10">
+
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Service</th>
+          <th>Status</th>
+          <th>Assigned To</th>
+        </tr>
+      </thead>
+
+      <tbody id="requestTable">
+
+      </tbody>
+
+    </table>
+
+  </section>
+
+  <script>
+
+    async function loadRequests() {
+
+      const response = await fetch(
+        "http://localhost:3000/requests"
+      );
+
+      const requests = await response.json();
+
+      const table = document.getElementById("requestTable");
+
+      table.innerHTML = "";
+
+      requests.forEach(request => {
+
+        table.innerHTML += `
+          <tr>
+
+            <td>${request.name}</td>
+
+            <td>${request.phone}</td>
+
+            <td>${request.service}</td>
+
+            <td>
+
+              <select onchange="updateStatus(${request.id}, this.value)">
+
+                <option ${request.status === "Pending" ? "selected" : ""}>
+                  Pending
+                </option>
+
+                <option ${request.status === "In Progress" ? "selected" : ""}>
+                  In Progress
+                </option>
+
+                <option ${request.status === "Completed" ? "selected" : ""}>
+                  Completed
+                </option>
+
+              </select>
+
+            </td>
+
+            <td>
+
+              <input
+                type="text"
+                value="${request.assignedTo}"
+                onchange="assignTask(${request.id}, this.value)"
+              >
+
+            </td>
+
+          </tr>
+        `;
+
+      });
+
+    }
+
+    async function updateStatus(id, status) {
+
+      await fetch(
+        `http://localhost:3000/update-status/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ status })
+        }
+      );
+
+      loadRequests();
+
+    }
+
+    async function assignTask(id, assignedTo) {
+
+      await fetch(
+        `http://localhost:3000/assign-task/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ assignedTo })
+        }
+      );
+
+      loadRequests();
+
+    }
+
+    loadRequests();
+
+  </script>
+
+</body>
+</html>
