@@ -42,7 +42,7 @@
     async function loadRequests() {
 
       const response = await fetch(
-        "http://localhost:3000/requests"
+        "https://supabyte-platform.onrender.com/requests"
       );
 
       const requests = await response.json();
@@ -102,7 +102,7 @@
     async function updateStatus(id, status) {
 
       await fetch(
-        `http://localhost:3000/update-status/${id}`,
+        `https://supabyte-platform.onrender.com/update-status/${id}`,
         {
           method: "PUT",
           headers: {
@@ -119,7 +119,7 @@
     async function assignTask(id, assignedTo) {
 
       await fetch(
-        `http://localhost:3000/assign-task/${id}`,
+        `https://supabyte-platform.onrender.com/assign-task/${id}`,
         {
           method: "PUT",
           headers: {
