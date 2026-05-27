@@ -185,18 +185,6 @@ app.get("/requests", (req, res) => {
   res.json(requests);
 
 });
-app.post("/requests", (req, res) => {
-  const newRequest = req.body;
-
-  requests.push(newRequest);
-
-  console.log("Received request:", newRequest);
-
-  res.json({
-    success: true,
-    message: "Request saved successfully"
-  });
-});
 
 /*
   🔄 UPDATE STATUS
